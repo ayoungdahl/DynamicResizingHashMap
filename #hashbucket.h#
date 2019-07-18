@@ -3,7 +3,7 @@
 
 #include <vector>
 
-//#include "hashnode.h"
+#include "hashnode.h"
 
 
 namespace akyhash {

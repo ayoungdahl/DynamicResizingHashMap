@@ -3,32 +3,31 @@
 
 #include <functional>
 #include <vector>
-
+#include <stdio.h>
 #include "hashbucket.h"
 
 #define NUM_BUCKETS 16
-#define NUM_NODES_IN_BUCKET 10
 
 namespace akyhash {
-  template<typename K, typename V>
+  template<typename K, typename V, typename Hash = std::hash<K>, typename KeyEQ = std::equal_to<K>>
   class HashMap {
   public:
 
-  HashMap(std::function<size_t(const K &key)> hashFunc(), std::function<bool(const K &lhs, const K &rhs)> keyEQFunc = std::equal_to<K>()) : 
-    hashFunc(hashFunc),
-      keyEQFunc(keyEQFunc),
-      numBuckets(NUM_BUCKETS),
-      numNodesInBucket(NUM_NODES_IN_BUCKET)
-      {
-	buckets = std::vector<HashBucket<K, V>>(NUM_BUCKETS, HashBucket<K, V>(NUM_BUCKETS));
-      }
- 
+  HashMap() : numBuckets(NUM_BUCKETS) {}
+  //HashMap(const Hash &hash, const KeyEQ &keyEQ) : Hash(hash), KeyEQ(keyEQ), numBuckets(NUM_BUCKETS) {}
+
+    std::pair<V, bool> insert(const K &key, const V &value) {
+      size_t hash = hashFunc(key);
+      return buckets[hash % numBuckets].insert(key, value, hash, keyEQFunc);
+    }
+
+    V get(const K &key) { return buckets[hashFunc(key) % numBuckets].get(key, keyEQFunc); }
+    
   private:
     int numBuckets;
-    const int numNodesInBucket;
-    size_t (*hashFunc)(const K &key);
-    bool (*keyEQFunc)(const K &lhs, const K &rhs);
-    std::vector<HashBucket<K, V>> buckets;
+    Hash hashFunc;
+    KeyEQ keyEQFunc;
+    std::vector<HashBucket<K, V>> buckets = std::vector<HashBucket<K, V>>(NUM_BUCKETS, HashBucket<K, V>(NUM_BUCKETS));
   };
 }
 #endif

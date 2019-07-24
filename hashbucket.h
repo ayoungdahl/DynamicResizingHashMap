@@ -9,50 +9,67 @@
 #define NUM_NODES_IN_BUCKET 10
 
 namespace akyhash {
-  
+
+  enum class InsertRC {OK, DUPLICATE_KEY, BUCKET_FULL};
+
   template<typename K, typename V>
   class HashBucket {
   public:
     HashBucket(const int num_buckets) : num_buckets_at_last_update(num_buckets) {}
-    HashBucket(const HashBucket &other) { this->num_buckets_at_last_update = other.num_buckets_at_last_update; }
-
-    HashBucket& operator=(const HashBucket&) = delete;
-
-
+    HashBucket(const HashBucket &other) {
+      this->num_buckets_at_last_update = other.num_buckets_at_last_update;
+      this->nodeChain = other.nodeChain;
+    }
+    
   private:
     template<typename k, typename v, typename Hash, typename KeyEQ>
     friend class HashMap;
 
-    std::vector<HashNode<K, V>> nodeChain = std::vector<HashNode<K, V>>(NUM_NODES_IN_BUCKET, HashNode<K,V>());
+    std::vector<HashNode<K, V>> nodeChain;
+
     int num_buckets_at_last_update;
 
-    std::pair<V, bool> insert(const K &key, const V &value, const size_t hash, std::function<bool(const K &lhs, const K &rhs)> keyEQFunc) {
+    std::vector<HashNode<K, V>> acceptNodesFromOldReturnRejects(const std::vector<HashNode<K, V>> &oldChain, const int matchNum) {
 
-      for (auto &node : nodeChain) {
-	if (!node.occupied) {
-	  node.key = key;
-	  node.value = value;
-	  node.hash = hash;
-	  node.occupied = true;
-	  return {node.value, true};
-	}
-	else if (keyEQFunc(node.key, key))
-	  return {node.value, false};
+      std::vector<HashNode<K, V>> reject;
+      for (auto &node : oldChain) {
+
+	if (node.hash % num_buckets_at_last_update == matchNum)
+	  nodeChain.push_back(node);
+	else 
+	  reject.push_back(node);
       }
 
-      return {value, false};
+      return reject;
+    }
+
+    void swapChain(std::vector<HashNode<K, V>> &swapIn) { std::swap(nodeChain, swapIn); }
+    
+    std::pair<V, InsertRC> insert(const K &key, const V &value, const size_t hash,
+				  std::function<bool(const K &lhs, const K &rhs)> keyEQFunc) {
+
+      for (auto &node : nodeChain) {
+	if (keyEQFunc(node.key, key))
+	  return {node.value, InsertRC::DUPLICATE_KEY};
+      }
+
+      if (nodeChain.size() < NUM_NODES_IN_BUCKET) {
+	nodeChain.push_back(HashNode<K, V>(key, value, hash));
+	return {value, InsertRC::OK};
+      }
+
+      return {value, InsertRC::BUCKET_FULL};
     }
 
     V& get(const K &key, std::function<bool(const K &lhs, const K &rhs)> keyEQFunc) {
 
       for (auto &node : nodeChain) {
-	if (node.occupied && keyEQFunc(node.key, key))
+	if (keyEQFunc(node.key, key))
 	  return node.value;
       }
 
       throw std::out_of_range("akyHashMap get");
     }
-
   };
 }
 #endif

@@ -32,8 +32,7 @@ private:
 
   CPPUNIT_TEST(testInsertAndGetString);
   CPPUNIT_TEST(testInsertAndGetIntString);
-  //  CPPUNIT_TEST_EXCEPTION(testDivideByZeroThrows);
-
+  CPPUNIT_TEST(test10MInsertAndGetInt);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -50,7 +49,7 @@ public:
     delete hm2;
     delete hm3;
   }
-
+ 
   void testInsertAndGetString() {
 
     std::string A = "hello!";
@@ -78,7 +77,6 @@ public:
     
  }
 
-
   void testInsertAndGetIntString() {
 
     intString A = {7, "hello!"};
@@ -103,8 +101,23 @@ public:
     CPPUNIT_ASSERT(hm3->get(A) == B);
     CPPUNIT_ASSERT(hm3->get(B) == C);
     CPPUNIT_ASSERT_THROW(hm3->get(C), std::out_of_range);
- }
+  }
+ 
+  void test10MInsertAndGetInt() {
+    const int num = 1e7;
+    std::pair<int, bool> rc;
 
+    for (int i = 0; i < num; i++) {
+      rc = hm1->insert(i, i * 10);
+      CPPUNIT_ASSERT(rc.second);
+      CPPUNIT_ASSERT(rc.first == i * 10);
+    }
+    
+    for (int i = 0; i < num; i++) {
+      CPPUNIT_ASSERT(hm1->get(i) == i * 10);
+    }
+    
+  }
 };
 
 int main(int argc, char **argv) {

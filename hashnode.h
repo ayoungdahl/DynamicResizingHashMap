@@ -6,14 +6,13 @@ namespace akyhash {
   template<typename K, typename V>
   class HashNode {
   public:
-  HashNode() : occupied(false) {}
+  HashNode(const K &key, const V &value, size_t hash) : key(key), value(value), hash(hash) {}
   private:
     template<typename k, typename v>
     friend class HashBucket;
     K key;
     V value;
     size_t hash;
-    bool occupied;
   };
 }
 #endif

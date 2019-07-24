@@ -13,15 +13,61 @@ namespace akyhash {
   class HashMap {
   public:
 
-  HashMap() : numBuckets(NUM_BUCKETS) {}
-  //HashMap(const Hash &hash, const KeyEQ &keyEQ) : Hash(hash), KeyEQ(keyEQ), numBuckets(NUM_BUCKETS) {}
+    HashMap() : numBuckets(NUM_BUCKETS) {}
+    HashMap(int nb) : numBuckets(nb) {}
 
-    std::pair<V, bool> insert(const K &key, const V &value) {
-      size_t hash = hashFunc(key);
-      return buckets[hash % numBuckets].insert(key, value, hash, keyEQFunc);
+    int findBucket(size_t hash) {
+
+      int bucket = hash % numBuckets;
+      if (buckets[bucket].num_buckets_at_last_update != numBuckets)
+	bucket = hash % buckets[bucket].num_buckets_at_last_update;
+
+      return bucket;
     }
 
-    V get(const K &key) { return buckets[hashFunc(key) % numBuckets].get(key, keyEQFunc); }
+    void splitBucket(int oldNum, int newNum) {
+      std::vector<HashNode<K, V>> nodesForOld = buckets[newNum].acceptNodesFromOldReturnRejects(buckets[oldNum].nodeChain, newNum);
+      buckets[oldNum].swapChain(nodesForOld);
+    }
+  
+    std::pair<V, bool> insert(const K &key, const V &value) {
+      size_t hash = hashFunc(key);
+      int insertBucket = findBucket(hash);
+      
+      std::pair<K, InsertRC> rc = buckets[insertBucket].insert(key, value, hash, keyEQFunc);
+
+      if (rc.second == InsertRC::OK)
+	return {rc.first, true};
+      else if (rc.second == InsertRC::DUPLICATE_KEY)
+	return {rc.first, false};
+
+      while (rc.second == InsertRC::BUCKET_FULL) {
+	insertBucket = findBucket(hash);
+
+	int newBucketNum;
+	if (buckets[insertBucket].num_buckets_at_last_update == numBuckets) {
+	  int oldNumBuckets = numBuckets;
+	  numBuckets *= 2;
+	  buckets.resize(numBuckets, HashBucket<K, V>(oldNumBuckets));
+	  newBucketNum = insertBucket + oldNumBuckets;
+	}
+	else
+	  newBucketNum = insertBucket + buckets[insertBucket].num_buckets_at_last_update;
+	
+	buckets[insertBucket].num_buckets_at_last_update = numBuckets;
+	buckets[newBucketNum].num_buckets_at_last_update = numBuckets;
+	splitBucket(insertBucket, newBucketNum);
+	rc = buckets[findBucket(hash)].insert(key, value, hash, keyEQFunc);
+
+	if (rc.second == InsertRC::OK)
+	  return {rc.first, true};
+	else
+	  return {rc.first, false};
+
+      }
+    }
+
+    V get(const K &key) { return buckets[findBucket(hashFunc(key))].get(key, keyEQFunc); }
     
   private:
     int numBuckets;

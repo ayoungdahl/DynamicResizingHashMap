@@ -77,6 +77,10 @@ public:
     CPPUNIT_ASSERT(hm->get(B) == C);
     CPPUNIT_ASSERT_THROW(hm->get(C), std::out_of_range);
 
+    CPPUNIT_ASSERT(hm->count(A) == 1);
+    CPPUNIT_ASSERT(hm->count(B) == 1);
+    CPPUNIT_ASSERT(hm->count(C) == 0);
+
     CPPUNIT_ASSERT(hm->erase(B) == 1);
     CPPUNIT_ASSERT(hm->erase(B) == 0);
     CPPUNIT_ASSERT_THROW(hm->get(B), std::out_of_range);

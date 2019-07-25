@@ -80,6 +80,14 @@ namespace akyhash {
       }
       return 0;
     }
+
+    size_t count (const K &key, std::function<bool(const K &lhs, const K &rhs)> keyEQFunc) const {
+      for (auto &node : nodeChain) {
+	if (keyEQFunc(node.key, key))
+	  return 1;
+      }
+      return 0;
+    }
   };
 }
 #endif

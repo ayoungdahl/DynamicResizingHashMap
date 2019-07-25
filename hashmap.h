@@ -15,8 +15,11 @@ namespace akyhash {
 
     HashMap() : numBuckets(NUM_BUCKETS) {}
     explicit HashMap(int nb) : numBuckets(nb) {}
+
+    V& operator[](const K &key) {
+    }
   
-    int findBucket(size_t hash) {
+    int findBucket(size_t hash) const {
 
       int bucket = hash % numBuckets;
       if (buckets[bucket].num_buckets_at_last_update != numBuckets)
@@ -69,7 +72,8 @@ namespace akyhash {
     V get(const K &key) { return buckets[findBucket(hashFunc(key))].get(key, keyEQFunc); }
 
     size_t erase(const K &key) { return buckets[findBucket(hashFunc(key))].erase(key, keyEQFunc); }
-
+    size_t count(const K &key) const { return buckets[findBucket(hashFunc(key))].count(key, keyEQFunc); } 
+    
   private:
     int numBuckets;
     Hash hashFunc;

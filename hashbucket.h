@@ -15,12 +15,12 @@ namespace akyhash {
   template<typename K, typename V>
   class HashBucket {
   public:
-    HashBucket(const int num_buckets) : num_buckets_at_last_update(num_buckets) {}
+    explicit HashBucket(const int num_buckets) : num_buckets_at_last_update(num_buckets) {}
     HashBucket(const HashBucket &other) {
       this->num_buckets_at_last_update = other.num_buckets_at_last_update;
       this->nodeChain = other.nodeChain;
     }
-    
+	
   private:
     template<typename k, typename v, typename Hash, typename KeyEQ>
     friend class HashMap;
@@ -69,6 +69,16 @@ namespace akyhash {
       }
 
       throw std::out_of_range("akyHashMap get");
+    }
+
+    size_t erase(const K &key, std::function<bool(const K &lhs, const K &rhs)> keyEQFunc) {
+      for (auto it = nodeChain.begin(); it != nodeChain.end(); it++) {
+	if (keyEQFunc(it->key, key)) {
+	  nodeChain.erase(it);
+	  return 1;
+	}
+      }
+      return 0;
     }
   };
 }

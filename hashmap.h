@@ -14,8 +14,8 @@ namespace akyhash {
   public:
 
     HashMap() : numBuckets(NUM_BUCKETS) {}
-    HashMap(int nb) : numBuckets(nb) {}
-
+    explicit HashMap(int nb) : numBuckets(nb) {}
+  
     int findBucket(size_t hash) {
 
       int bucket = hash % numBuckets;
@@ -63,12 +63,13 @@ namespace akyhash {
 	  return {rc.first, true};
 	else
 	  return {rc.first, false};
-
       }
     }
 
     V get(const K &key) { return buckets[findBucket(hashFunc(key))].get(key, keyEQFunc); }
-    
+
+    size_t erase(const K &key) { return buckets[findBucket(hashFunc(key))].erase(key, keyEQFunc); }
+
   private:
     int numBuckets;
     Hash hashFunc;

@@ -9,4 +9,4 @@ So far it has only simple functionality.
   * Each hash bucket has a fixed size chain in which to store keys and values.
   * If a kv-chain overflows, the number of buckets increases.
   
-Next up is to add more of the STL provided functionality... delete, [] access (w/ update key), iterator, clear, etc. 
+Next up is to add more of the STL provided functionality... [] access (w/ update key), iterator, clear, etc. 

@@ -10,6 +10,8 @@
 #define NUM_BUCKETS 16
 
 namespace akyhash {
+  template<typename K, typename V> class HMiterator;
+
   template<typename K, typename V, typename Hash = std::hash<K>, typename KeyEQ = std::equal_to<K>>
   class HashMap {
   public:
@@ -34,7 +36,9 @@ namespace akyhash {
     V get(const K &key) { return buckets[findBucket(hashFunc(key))].get(key, keyEQFunc); }
     size_t erase(const K &key) { return buckets[findBucket(hashFunc(key))].erase(key, keyEQFunc); }
     size_t count(const K &key) const { return buckets[findBucket(hashFunc(key))].count(key, keyEQFunc); } 
-    
+    HMiterator<K, V> begin() { return HMiterator<K, V>(&this, buckets.begin(), buckets[0].nodeChain.begin()); }
+    HMiterator<K, V> end() { return HMiterator<K, V>(&this, buckets.end(),buckets[numBuckets - 1].nodeChain.end()); }
+
   private:
     int numBuckets;
     Hash hashFunc;
@@ -90,6 +94,30 @@ namespace akyhash {
       }
     }
   };
+
+  template<typename K, typename V>
+  class HMiterator {
+
+  public:
+    HMiterator(HashMap<K, V> &hm, typename std::vector<HashBucket<K, V>>::iterator bit, typename std::vector<HashNode<K, V>> nit)
+    : hm(hm), bucket_it(bit), node_it(nit) {}
+
+    HMiterator& operator++() {
+      
+      if (++node_it == bucket_it->nodeChain.end()) {
+	while (bucket_it != hm.buckets.end() && node_it == bucket_it->nodeChain.end()) {
+	  node_it = ++bucket_it->nodeChain.begin();
+	}
+      }
+
+      return &this;
+    }
+  private:
+    HashMap<V, V> &hm;
+    typename std::vector<HashBucket<K, V>>::iterator bucket_it;
+    typename std::vector<HashNode<K, V>>::iterator node_it;
+  };
+
 }
 #endif
   

@@ -64,9 +64,10 @@ namespace akyhash {
     std::pair<std::reference_wrapper<V>, bool> giveValRef(const K &key, std::function<bool(const K &lhs, const K &rhs)> KeyEQFunc) {
       for (auto &node : nodeChain) {
 	if (KeyEQFunc(node.key, key))
-	  return {node.giveValRef, true}; 
+	  return {node.giveValRef(), true}; 
       }
-      return {0, false};
+      
+      return {std::ref(nodeChain.back().value), false};
     }
       
     V& get(const K &key, std::function<bool(const K &lhs, const K &rhs)> keyEQFunc) {

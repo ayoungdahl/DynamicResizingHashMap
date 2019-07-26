@@ -17,13 +17,13 @@ namespace akyhash {
     HashMap() : numBuckets(NUM_BUCKETS) {}
     explicit HashMap(int nb) : numBuckets(nb) {}
 
-    V& operator[](const K &key) {
-      std::pair<V&, bool> ref = buckets[findBucket(HashFunc(key))].giveRef(key, keyEQFunc);
-      if (ref.second)
-	return ref.first;
+    V& operator[](K &key) {
+      std::pair<std::reference_wrapper<V>, bool> ref = buckets[findBucket(hashFunc(key))].giveValRef(key, keyEQFunc);
 
-      return insertAux(key, V());
+      if (ref.second)
+	return ref.first.get();
       
+      return insertAux(key, V()).first.get();      
     }
 
     std::pair<V, bool> insert(const K &key, const V &value) {

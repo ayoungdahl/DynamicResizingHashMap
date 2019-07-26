@@ -88,6 +88,10 @@ public:
     CPPUNIT_ASSERT_THROW(hm->get(B), std::out_of_range);
     CPPUNIT_ASSERT(hm->get(A) == B);
 
+    CPPUNIT_ASSERT((*hm)[(K&)A] == B);
+    (*hm)[(K&)A] = C;
+    CPPUNIT_ASSERT(!(hm->get(A) == B));
+    CPPUNIT_ASSERT(hm->get(A) == C);
   }
   void testInt() { testIt(hm1, 7, 11, 42); }
   void testString() { testIt(hm2, s1, s2, s3); }

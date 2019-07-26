@@ -13,6 +13,8 @@ namespace akyhash {
     K key;
     V value;
     size_t hash;
+
+    V& giveValRef() { return value; }
   };
 }
 #endif

@@ -2,6 +2,8 @@
 #include <cppunit/TestCaller.h>
 #include <cppunit/TestCase.h>
 #include <cppunit/ui/text/TestRunner.h>
+
+#include <iostream>
 #include <stdio.h>
 #include "hashmap.h"
 
@@ -60,7 +62,7 @@ public:
 
     std::pair<V, bool> rc;
     rc = hm->insert(A, B);
-    
+
     CPPUNIT_ASSERT(rc.second);
     CPPUNIT_ASSERT(rc.first == B);
 
@@ -85,96 +87,12 @@ public:
     CPPUNIT_ASSERT(hm->erase(B) == 0);
     CPPUNIT_ASSERT_THROW(hm->get(B), std::out_of_range);
     CPPUNIT_ASSERT(hm->get(A) == B);
-    
+
   }
   void testInt() { testIt(hm1, 7, 11, 42); }
-  /*    
-  void testInt() {
-
-    int A = 7;
-    int B = 11;
-    int C = 42;
-    std::pair<std::int, bool> rc;
-
-    rc = hm1->insert(A, B);
-    
-    CPPUNIT_ASSERT(rc.second);
-    CPPUNIT_ASSERT(rc.first == B);
-
-    rc = hm1->insert(B, C);
-
-    CPPUNIT_ASSERT(rc.second);
-    CPPUNIT_ASSERT(rc.first == C);
-   
-    rc = hm1->insert(A, C);
-    CPPUNIT_ASSERT(!rc.second);
-    CPPUNIT_ASSERT(rc.first == B);
-
-    CPPUNIT_ASSERT(hm1->get(A) == B);
-    CPPUNIT_ASSERT(hm1->get(B) == C);
-    CPPUNIT_ASSERT_THROW(hm1->get(C), std::out_of_range);
-
-    CPPUNIT_ASSERT(
-
- }
-  */
   void testString() { testIt(hm2, s1, s2, s3); }
-  /*
-  void testInsertAndGetString() {
-
-    std::string A = "hello!";
-    std::string B = "A great value!";
-    std::string C = "Happy Chocolate:)";
-    std::pair<std::string, bool> rc;
-
-    rc = hm2->insert(A, B);
-    
-    CPPUNIT_ASSERT(rc.second);
-    CPPUNIT_ASSERT(rc.first == B);
-
-    rc = hm2->insert(B, C);
-
-    CPPUNIT_ASSERT(rc.second);
-    CPPUNIT_ASSERT(rc.first == C);
-   
-    rc = hm2->insert(A, C);
-    CPPUNIT_ASSERT(!rc.second);
-    CPPUNIT_ASSERT(rc.first == B);
-
-    CPPUNIT_ASSERT(hm2->get(A) == B);
-    CPPUNIT_ASSERT(hm2->get(B) == C);
-    CPPUNIT_ASSERT_THROW(hm2->get(C), std::out_of_range);
-    
- }
-  */
   void testIntString() { testIt(hm3, intString(7, s1), intString(11, s2), intString(42, s3)); }
-  /*
-  void testInsertAndGetIntString() {
-
-    intString A = {7, "hello!"};
-    intString B = {11, "A great value!"};
-    intString C = {42, "Happy Chocolate:)"};
-    std::pair<intString, bool> rc;
-
-    rc = hm3->insert(A, B);
-    
-    CPPUNIT_ASSERT(rc.second);
-    CPPUNIT_ASSERT(rc.first == B);
-
-    rc = hm3->insert(B, C);
-
-    CPPUNIT_ASSERT(rc.second);
-    CPPUNIT_ASSERT(rc.first == C);
-   
-    rc = hm3->insert(A, C);
-    CPPUNIT_ASSERT(!rc.second);
-    CPPUNIT_ASSERT(rc.first == B);
-
-    CPPUNIT_ASSERT(hm3->get(A) == B);
-    CPPUNIT_ASSERT(hm3->get(B) == C);
-    CPPUNIT_ASSERT_THROW(hm3->get(C), std::out_of_range);
-  }
-  */
+  
   void test1MInt() {
     const int num = 1e6;
     std::pair<int, bool> rc;
@@ -190,6 +108,7 @@ public:
     }
     
   }
+  
 };
 
 int main(int argc, char **argv) {

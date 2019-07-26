@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <vector>
+#include <iostream>
 #include <stdio.h>
 #include "hashbucket.h"
 
@@ -17,8 +18,29 @@ namespace akyhash {
     explicit HashMap(int nb) : numBuckets(nb) {}
 
     V& operator[](const K &key) {
+      std::pair<V&, bool> ref = buckets[findBucket(HashFunc(key))].giveRef(key, keyEQFunc);
+      if (ref.second)
+	return ref.first;
+
+      return insertAux(key, V());
+      
     }
-  
+
+    std::pair<V, bool> insert(const K &key, const V &value) {
+      std::pair<V, bool> ref = insertAux(key, value);
+      return {ref.first, ref.second};
+    }
+
+    V get(const K &key) { return buckets[findBucket(hashFunc(key))].get(key, keyEQFunc); }
+    size_t erase(const K &key) { return buckets[findBucket(hashFunc(key))].erase(key, keyEQFunc); }
+    size_t count(const K &key) const { return buckets[findBucket(hashFunc(key))].count(key, keyEQFunc); } 
+    
+  private:
+    int numBuckets;
+    Hash hashFunc;
+    KeyEQ keyEQFunc;
+    std::vector<HashBucket<K, V>> buckets = std::vector<HashBucket<K, V>>(NUM_BUCKETS, HashBucket<K, V>(NUM_BUCKETS));
+
     int findBucket(size_t hash) const {
 
       int bucket = hash % numBuckets;
@@ -32,13 +54,12 @@ namespace akyhash {
       std::vector<HashNode<K, V>> nodesForOld = buckets[newNum].acceptNodesFromOldReturnRejects(buckets[oldNum].nodeChain, newNum);
       buckets[oldNum].swapChain(nodesForOld);
     }
-  
-    std::pair<V, bool> insert(const K &key, const V &value) {
+
+    std::pair<std::reference_wrapper<V>, bool> insertAux(const K &key, const V &value) {
       size_t hash = hashFunc(key);
       int insertBucket = findBucket(hash);
-      
-      std::pair<K, InsertRC> rc = buckets[insertBucket].insert(key, value, hash, keyEQFunc);
 
+      std::pair<std::reference_wrapper<V>, InsertRC> rc = buckets[insertBucket].insert(key, value, hash, keyEQFunc);
       if (rc.second == InsertRC::OK)
 	return {rc.first, true};
       else if (rc.second == InsertRC::DUPLICATE_KEY)
@@ -68,17 +89,6 @@ namespace akyhash {
 	  return {rc.first, false};
       }
     }
-
-    V get(const K &key) { return buckets[findBucket(hashFunc(key))].get(key, keyEQFunc); }
-
-    size_t erase(const K &key) { return buckets[findBucket(hashFunc(key))].erase(key, keyEQFunc); }
-    size_t count(const K &key) const { return buckets[findBucket(hashFunc(key))].count(key, keyEQFunc); } 
-    
-  private:
-    int numBuckets;
-    Hash hashFunc;
-    KeyEQ keyEQFunc;
-    std::vector<HashBucket<K, V>> buckets = std::vector<HashBucket<K, V>>(NUM_BUCKETS, HashBucket<K, V>(NUM_BUCKETS));
   };
 }
 #endif

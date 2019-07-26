@@ -45,22 +45,30 @@ namespace akyhash {
 
     void swapChain(std::vector<HashNode<K, V>> &swapIn) { std::swap(nodeChain, swapIn); }
     
-    std::pair<V, InsertRC> insert(const K &key, const V &value, const size_t hash,
-				  std::function<bool(const K &lhs, const K &rhs)> keyEQFunc) {
+    std::pair<std::reference_wrapper<V>, InsertRC> insert(const K &key, const V &value, const size_t hash,
+				   std::function<bool(const K &lhs, const K &rhs)> keyEQFunc) {
 
       for (auto &node : nodeChain) {
 	if (keyEQFunc(node.key, key))
-	  return {node.value, InsertRC::DUPLICATE_KEY};
+	  return {node.giveValRef(), InsertRC::DUPLICATE_KEY};
       }
 
       if (nodeChain.size() < NUM_NODES_IN_BUCKET) {
 	nodeChain.push_back(HashNode<K, V>(key, value, hash));
-	return {value, InsertRC::OK};
+	return {std::ref(nodeChain.back().value), InsertRC::OK};
       }
-
-      return {value, InsertRC::BUCKET_FULL};
+      
+      return {(V&) value, InsertRC::BUCKET_FULL};
     }
 
+    std::pair<std::reference_wrapper<V>, bool> giveValRef(const K &key, std::function<bool(const K &lhs, const K &rhs)> KeyEQFunc) {
+      for (auto &node : nodeChain) {
+	if (KeyEQFunc(node.key, key))
+	  return {node.giveValRef, true}; 
+      }
+      return {0, false};
+    }
+      
     V& get(const K &key, std::function<bool(const K &lhs, const K &rhs)> keyEQFunc) {
 
       for (auto &node : nodeChain) {

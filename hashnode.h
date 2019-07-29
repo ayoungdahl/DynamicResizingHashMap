@@ -6,15 +6,14 @@ namespace akyhash {
   template<typename K, typename V>
   class HashNode {
   public:
-  HashNode(const K &key, const V &value, size_t hash) : key(key), value(value), hash(hash) {}
+    HashNode(const std::pair<K, V> &kv, size_t hash) : kv(kv), hash(hash) {}
   private:
     template<typename k, typename v>
     friend class HashBucket;
-    K key;
-    V value;
+    std::pair<K, V> kv;
     size_t hash;
 
-    V& giveValRef() { return value; }
+    V& giveValRef() { return kv.value; }
   };
 }
 #endif

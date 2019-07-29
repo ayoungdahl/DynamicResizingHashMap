@@ -5,6 +5,8 @@
 
 #include <iostream>
 #include <stdio.h>
+#include <unordered_map>
+
 #include "hashmap.h"
 
 class AkyHashTest : public CppUnit::TestFixture {
@@ -35,7 +37,6 @@ private:
   std::string s3 = "Sweetroll!";
   
   CPPUNIT_TEST_SUITE(AkyHashTest);
-
   CPPUNIT_TEST(testInt);
   CPPUNIT_TEST(testString);
   CPPUNIT_TEST(testIntString);
@@ -61,17 +62,17 @@ public:
   void testIt(akyhash::HashMap<K, V, H> *hm, const K &A, const K &B, const K &C) {
 
     std::pair<V, bool> rc;
-    rc = hm->insert(A, B);
+    rc = hm->insert(std::pair<K, K>(A, B));
 
     CPPUNIT_ASSERT(rc.second);
     CPPUNIT_ASSERT(rc.first == B);
 
-    rc = hm->insert(B, C);
+    rc = hm->insert(std::pair<K, K>(B, C));
 
     CPPUNIT_ASSERT(rc.second);
     CPPUNIT_ASSERT(rc.first == C);
    
-    rc = hm->insert(A, C);
+    rc = hm->insert(std::pair<K, K>(A, C));
     CPPUNIT_ASSERT(!rc.second);
     CPPUNIT_ASSERT(rc.first == B);
 
@@ -87,7 +88,19 @@ public:
     CPPUNIT_ASSERT(hm->erase(B) == 0);
     CPPUNIT_ASSERT_THROW(hm->get(B), std::out_of_range);
     CPPUNIT_ASSERT(hm->get(A) == B);
+    
+    std::unordered_map<K, V, H> tm;
+    int loops = 0;
+    for (akyhash::HMiterator<K, V> it = hm->begin(); it != hm->end(); ++it) {
+      K key = it->first;
+      tm[it->first] = it->second;
+      loops++;
+    }
 
+    CPPUNIT_ASSERT(loops == 2);
+    CPPUNIT_ASSERT(tm[A] == B);
+    CPPUNIT_ASSERT(tm[B] == C);
+    
     CPPUNIT_ASSERT((*hm)[(K&)A] == B);
     (*hm)[(K&)A] = C;
     CPPUNIT_ASSERT(!(hm->get(A) == B));
@@ -102,7 +115,7 @@ public:
     std::pair<int, bool> rc;
 
     for (int i = 0; i < num; i++) {
-      rc = hm1->insert(i, i * 10);
+      rc = hm1->insert(std::pair<int, int>(i, i * 10));
       CPPUNIT_ASSERT(rc.second);
       CPPUNIT_ASSERT(rc.first == i * 10);
     }

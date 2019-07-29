@@ -31,16 +31,16 @@ namespace akyhash {
       return insertAux(key, V()).first.get();      
     }
 
-    std::pair<V, bool> insert(const K &key, const V &value) {
-      std::pair<V, bool> ref = insertAux(key, value);
+    std::pair<V, bool> insert(const std::pair<K, V> &kv) {
+      std::pair<V, bool> ref = insertAux(kv);
       return {ref.first, ref.second};
     }
 
     V get(const K &key) { return buckets[findBucket(hashFunc(key))].get(key, keyEQFunc); }
     size_t erase(const K &key) { return buckets[findBucket(hashFunc(key))].erase(key, keyEQFunc); }
     size_t count(const K &key) const { return buckets[findBucket(hashFunc(key))].count(key, keyEQFunc); } 
-    HMiterator<K, V> begin() { return HMiterator<K, V>(&this, buckets.begin(), buckets[0].nodeChain.begin()); }
-    HMiterator<K, V> end() { return HMiterator<K, V>(&this, buckets.end(),buckets[numBuckets - 1].nodeChain.end()); }
+    HMiterator<K, V> begin() { return HMiterator<K, V>(*this, buckets.begin(), buckets[0].nodeChain.begin()); }
+    HMiterator<K, V> end() { return HMiterator<K, V>(*this, buckets.end(),buckets[numBuckets - 1].nodeChain.end()); }
 
   private:
     int numBuckets;
@@ -62,11 +62,11 @@ namespace akyhash {
       buckets[oldNum].swapChain(nodesForOld);
     }
 
-    std::pair<std::reference_wrapper<V>, bool> insertAux(const K &key, const V &value) {
-      size_t hash = hashFunc(key);
+    std::pair<std::reference_wrapper<V>, bool> insertAux(const std::pair<K, V> &kv) {
+      size_t hash = hashFunc(kv.first);
       int insertBucket = findBucket(hash);
 
-      std::pair<std::reference_wrapper<V>, InsertRC> rc = buckets[insertBucket].insert(key, value, hash, keyEQFunc);
+      std::pair<std::reference_wrapper<V>, InsertRC> rc = buckets[insertBucket].insert(kv, hash, keyEQFunc);
       if (rc.second == InsertRC::OK)
 	return {rc.first, true};
       else if (rc.second == InsertRC::DUPLICATE_KEY)
@@ -88,7 +88,7 @@ namespace akyhash {
 	buckets[insertBucket].num_buckets_at_last_update = numBuckets;
 	buckets[newBucketNum].num_buckets_at_last_update = numBuckets;
 	splitBucket(insertBucket, newBucketNum);
-	rc = buckets[findBucket(hash)].insert(key, value, hash, keyEQFunc);
+	rc = buckets[findBucket(hash)].insert(kv, hash, keyEQFunc);
 
 	if (rc.second == InsertRC::OK)
 	  return {rc.first, true};
@@ -103,7 +103,7 @@ namespace akyhash {
 
   public:
  
-    HMiterator(HashMap<K, V> &hm, typename std::vector<HashBucket<K, V>>::iterator bit, typename std::vector<HashNode<K, V>> nit)
+  HMiterator(HashMap<K, V> &hm, typename std::vector<HashBucket<K, V>>::iterator bit, typename std::vector<HashNode<K, V>>::iterator nit)
     : hm(hm), bucket_it(bit), node_it(nit) {}
 
     HMiterator(const HMiterator<K, V> &orig) : hm(orig.hm), bucket_it(orig.bucket_it), node_it(orig.node_it) {}
@@ -125,7 +125,7 @@ namespace akyhash {
 
     HMiterator& operator++() {
       increment();
-      return &this;
+      return *this;
     }
 
     HMiterator operator++(int) {
@@ -136,8 +136,8 @@ namespace akyhash {
 
     bool operator==(const HMiterator<K, V> &rhs) { return hm == rhs.hm && bucket_it == rhs.bucket_it && node_it == rhs.node_it; }
     bool operator!=(const HMiterator<K, V> &rhs) { return hm != rhs.hm || bucket_it != rhs.bucket_it || node_it != rhs.node_it; }
-    std::pair<K, std::reference_wrapper<V>> operator*() { return {node_it->key, std::ref(node_it->value)}; }
-    std::pair<K, V*> operator->() { return {node_it->key; &node_it->value}; }
+    std::pair<K, std::reference_wrapper<V>> operator*() { return {node_it->kv.key, std::ref(node_it->kv.value)}; }
+    std::pair<K, V>* operator->() { return node_it->kv; }
     
   private:
     HashMap<V, V> &hm;

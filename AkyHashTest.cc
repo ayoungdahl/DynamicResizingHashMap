@@ -91,7 +91,7 @@ public:
     
     std::unordered_map<K, V, H> tm;
     int loops = 0;
-    for (akyhash::HMiterator<K, V> it = hm->begin(); it != hm->end(); ++it) {
+    for (akyhash::HMiterator<K, V, H> it = hm->begin(); it != hm->end(); ++it) {
       K key = it->first;
       tm[it->first] = it->second;
       loops++;

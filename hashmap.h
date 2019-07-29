@@ -10,7 +10,7 @@
 #define NUM_BUCKETS 16
 
 namespace akyhash {
-  template<typename K, typename V> class HMiterator;
+  template<typename K, typename V, typename Hash = std::hash<K>, typename KeyEQ = std::equal_to<K>> class HMiterator;
 
   template<typename K, typename V, typename Hash = std::hash<K>, typename KeyEQ = std::equal_to<K>>
   class HashMap {
@@ -19,8 +19,8 @@ namespace akyhash {
     HashMap() : numBuckets(NUM_BUCKETS) {}
     explicit HashMap(int nb) : numBuckets(nb) {}
 
-    bool operator==(const HashMap<K, V> &rhs) { return buckets == rhs.buckets; }
-    bool operator!=(const HashMap<K, V> &rhs) { return buckets != rhs.buckets; }
+    bool operator==(const HashMap<K, V, Hash, KeyEQ> &rhs) { return buckets == rhs.buckets; }
+    bool operator!=(const HashMap<K, V, Hash, KeyEQ> &rhs) { return buckets != rhs.buckets; }
   
     V& operator[](K &key) {
       std::pair<std::reference_wrapper<V>, bool> ref = buckets[findBucket(hashFunc(key))].giveValRef(key, keyEQFunc);
@@ -28,7 +28,7 @@ namespace akyhash {
       if (ref.second)
 	return ref.first.get();
       
-      return insertAux(key, V()).first.get();      
+      return insertAux(std::pair<const K, V>(key, V())).first.get();      
     }
 
     std::pair<V, bool> insert(const std::pair<K, V> &kv) {
@@ -39,10 +39,14 @@ namespace akyhash {
     V get(const K &key) { return buckets[findBucket(hashFunc(key))].get(key, keyEQFunc); }
     size_t erase(const K &key) { return buckets[findBucket(hashFunc(key))].erase(key, keyEQFunc); }
     size_t count(const K &key) const { return buckets[findBucket(hashFunc(key))].count(key, keyEQFunc); } 
-    HMiterator<K, V> begin() { return HMiterator<K, V>(*this, buckets.begin(), buckets[0].nodeChain.begin()); }
-    HMiterator<K, V> end() { return HMiterator<K, V>(*this, buckets.end(),buckets[numBuckets - 1].nodeChain.end()); }
+    HMiterator<K, V, Hash, KeyEQ> begin() { return HMiterator<K, V, Hash, KeyEQ>(*this, buckets.begin(), buckets[0].nodeChain.begin()); }
+    HMiterator<K, V, Hash, KeyEQ> end() {
+      return HMiterator<K, V, Hash, KeyEQ>(*this, buckets.end(),buckets[numBuckets - 1].nodeChain.end());
+    }
 
   private:
+    template<typename k, typename v, typename hash, typename keyeq>
+    friend class HMiterator;
     int numBuckets;
     Hash hashFunc;
     KeyEQ keyEQFunc;
@@ -62,7 +66,7 @@ namespace akyhash {
       buckets[oldNum].swapChain(nodesForOld);
     }
 
-    std::pair<std::reference_wrapper<V>, bool> insertAux(const std::pair<K, V> &kv) {
+    std::pair<std::reference_wrapper<V>, bool> insertAux(const std::pair<const K, V> &kv) {
       size_t hash = hashFunc(kv.first);
       int insertBucket = findBucket(hash);
 
@@ -98,15 +102,16 @@ namespace akyhash {
     }
   };
 
-  template<typename K, typename V>
+  template<typename K, typename V, typename Hash, typename KeyEQ>
   class HMiterator {
 
   public:
  
-  HMiterator(HashMap<K, V> &hm, typename std::vector<HashBucket<K, V>>::iterator bit, typename std::vector<HashNode<K, V>>::iterator nit)
+  HMiterator(HashMap<K, V, Hash, KeyEQ> &hm, typename std::vector<HashBucket<K, V>>::iterator bit,
+	     typename std::vector<HashNode<K, V>>::iterator nit)
     : hm(hm), bucket_it(bit), node_it(nit) {}
 
-    HMiterator(const HMiterator<K, V> &orig) : hm(orig.hm), bucket_it(orig.bucket_it), node_it(orig.node_it) {}
+  HMiterator(const HMiterator<K, V, Hash, KeyEQ> &orig) : hm(orig.hm), bucket_it(orig.bucket_it), node_it(orig.node_it) {}
 
     inline void increment() {
       if (++node_it == bucket_it->nodeChain.end()) {
@@ -134,13 +139,17 @@ namespace akyhash {
       return orig;
     }
 
-    bool operator==(const HMiterator<K, V> &rhs) { return hm == rhs.hm && bucket_it == rhs.bucket_it && node_it == rhs.node_it; }
-    bool operator!=(const HMiterator<K, V> &rhs) { return hm != rhs.hm || bucket_it != rhs.bucket_it || node_it != rhs.node_it; }
-    std::pair<K, std::reference_wrapper<V>> operator*() { return {node_it->kv.key, std::ref(node_it->kv.value)}; }
-    std::pair<K, V>* operator->() { return node_it->kv; }
+    bool operator==(const HMiterator<K, V, Hash, KeyEQ> &rhs) {
+      return hm == rhs.hm && bucket_it == rhs.bucket_it && node_it == rhs.node_it;
+    }
+    bool operator!=(const HMiterator<K, V, Hash, KeyEQ> &rhs) {
+      return hm != rhs.hm || bucket_it != rhs.bucket_it || node_it != rhs.node_it;
+    }
+    std::pair<const K, std::reference_wrapper<V>> operator*() { return {node_it->kv.first, std::ref(node_it->kv.second)}; }
+    std::pair<const K, V>* operator->() { return node_it->giveKV(); }
     
   private:
-    HashMap<V, V> &hm;
+    HashMap<V, V, Hash, KeyEQ> &hm;
     typename std::vector<HashBucket<K, V>>::iterator bucket_it;
     typename std::vector<HashNode<K, V>>::iterator node_it;
   };

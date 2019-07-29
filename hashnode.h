@@ -10,10 +10,13 @@ namespace akyhash {
   private:
     template<typename k, typename v>
     friend class HashBucket;
-    std::pair<K, V> kv;
+    template<typename k, typename v, typename hash, typename keq>
+    friend class HMiterator;
+    std::pair<const K, V> kv;
     size_t hash;
 
-    V& giveValRef() { return kv.value; }
+    V& giveValRef() { return kv.second; }
+    std::pair<const K, V>* giveKV() { return &kv; }
   };
 }
 #endif

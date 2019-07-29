@@ -24,7 +24,8 @@ namespace akyhash {
   private:
     template<typename k, typename v, typename Hash, typename KeyEQ>
     friend class HashMap;
-
+    template<typename k, typename v, typename Hash, typename KeyEQ>
+    friend class HMiterator;
     std::vector<HashNode<K, V>> nodeChain;
 
     int num_buckets_at_last_update;
@@ -48,32 +49,32 @@ namespace akyhash {
 				   std::function<bool(const K &lhs, const K &rhs)> keyEQFunc) {
 
       for (auto &node : nodeChain) {
-	if (keyEQFunc(node.kv.key, kv.key))
+	if (keyEQFunc(node.kv.first, kv.first))
 	  return {node.giveValRef(), InsertRC::DUPLICATE_KEY};
       }
 
       if (nodeChain.size() < NUM_NODES_IN_BUCKET) {
 	nodeChain.push_back(HashNode<K, V>(kv, hash));
-	return {std::ref(nodeChain.back().kv.value), InsertRC::OK};
+	return {std::ref(nodeChain.back().kv.second), InsertRC::OK};
       }
       
-      return {kv.value, InsertRC::BUCKET_FULL};
+      return {std::ref(nodeChain.back().kv.second), InsertRC::BUCKET_FULL};
     }
 
     std::pair<std::reference_wrapper<V>, bool> giveValRef(const K &key, std::function<bool(const K &lhs, const K &rhs)> KeyEQFunc) {
       for (auto &node : nodeChain) {
-	if (KeyEQFunc(node.kv.key, key))
+	if (KeyEQFunc(node.kv.first, key))
 	  return {node.giveValRef(), true}; 
       }
       
-      return {std::ref(nodeChain.back().kv.value), false};
+      return {std::ref(nodeChain.back().kv.second), false};
     }
       
     V& get(const K &key, std::function<bool(const K &lhs, const K &rhs)> keyEQFunc) {
 
       for (auto &node : nodeChain) {
-	if (keyEQFunc(node.kv.key, key))
-	  return node.kv.value;
+	if (keyEQFunc(node.kv.first, key))
+	  return node.kv.second;
       }
 
       throw std::out_of_range("akyHashMap get");
@@ -81,7 +82,7 @@ namespace akyhash {
 
     size_t erase(const K &key, std::function<bool(const K &lhs, const K &rhs)> keyEQFunc) {
       for (auto it = nodeChain.begin(); it != nodeChain.end(); it++) {
-	if (keyEQFunc(it->kv.key, key)) {
+	if (keyEQFunc(it->kv.first, key)) {
 	  nodeChain.erase(it);
 	  return 1;
 	}
@@ -91,7 +92,7 @@ namespace akyhash {
 
     size_t count (const K &key, std::function<bool(const K &lhs, const K &rhs)> keyEQFunc) const {
       for (auto &node : nodeChain) {
-	if (keyEQFunc(node.kv.key, key))
+	if (keyEQFunc(node.kv.first, key))
 	  return 1;
       }
       return 0;

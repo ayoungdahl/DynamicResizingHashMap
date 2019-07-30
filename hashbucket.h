@@ -20,6 +20,13 @@ namespace akyhash {
       this->num_buckets_at_last_update = other.num_buckets_at_last_update;
       this->nodeChain = other.nodeChain;
     }
+
+    bool operator==(const HashBucket &rhs) const {
+      return num_buckets_at_last_update == rhs.num_buckets_at_last_update && nodeChain == rhs.nodeChain;
+    }
+    bool operator!=(const HashBucket &rhs) const {
+      return num_buckets_at_last_update != rhs.num_buckets_at_last_update || nodeChain != rhs.nodeChain;
+    }
 	
   private:
     template<typename k, typename v, typename Hash, typename KeyEQ>

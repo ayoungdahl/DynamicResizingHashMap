@@ -19,8 +19,8 @@ namespace akyhash {
     HashMap() : numBuckets(NUM_BUCKETS) {}
     explicit HashMap(int nb) : numBuckets(nb) {}
 
-    bool operator==(const HashMap<K, V, Hash, KeyEQ> &rhs) { return buckets == rhs.buckets; }
-    bool operator!=(const HashMap<K, V, Hash, KeyEQ> &rhs) { return buckets != rhs.buckets; }
+    bool operator==(const HashMap<K, V, Hash, KeyEQ> &rhs) const { return buckets == rhs.buckets; }
+    bool operator!=(const HashMap<K, V, Hash, KeyEQ> &rhs) const { return buckets != rhs.buckets; }
   
     V& operator[](K &key) {
       std::pair<std::reference_wrapper<V>, bool> ref = buckets[findBucket(hashFunc(key))].giveValRef(key, keyEQFunc);
@@ -28,7 +28,7 @@ namespace akyhash {
       if (ref.second)
 	return ref.first.get();
       
-      return insertAux(std::pair<const K, V>(key, V())).first.get();      
+      return insertAux(std::make_pair(key, V())).first.get();      
     }
 
     std::pair<V, bool> insert(const std::pair<K, V> &kv) {
@@ -114,6 +114,7 @@ namespace akyhash {
   HMiterator(const HMiterator<K, V, Hash, KeyEQ> &orig) : hm(orig.hm), bucket_it(orig.bucket_it), node_it(orig.node_it) {}
 
     inline void increment() {
+      printf("it key : %d it val : %d\n", (int) node_it->kv.first, (int) node_it->kv.second);
       if (++node_it == bucket_it->nodeChain.end()) {
 	while (bucket_it != hm.buckets.end() && node_it == bucket_it->nodeChain.end()) {
 	  node_it = ++bucket_it->nodeChain.begin();
@@ -145,8 +146,8 @@ namespace akyhash {
     bool operator!=(const HMiterator<K, V, Hash, KeyEQ> &rhs) {
       return hm != rhs.hm || bucket_it != rhs.bucket_it || node_it != rhs.node_it;
     }
-    std::pair<const K, std::reference_wrapper<V>> operator*() { return {node_it->kv.first, std::ref(node_it->kv.second)}; }
-    std::pair<const K, V>* operator->() { return node_it->giveKV(); }
+    std::pair<K, std::reference_wrapper<V>> operator*() { return {node_it->kv.first, std::ref(node_it->kv.second)}; }
+    std::pair<K, V>* operator->() { return node_it->giveKV(); }
     
   private:
     HashMap<V, V, Hash, KeyEQ> &hm;

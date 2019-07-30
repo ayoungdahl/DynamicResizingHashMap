@@ -102,15 +102,18 @@ public:
 
     std::unordered_map<K, V, H, KEQ> tm;
     int loops = 0;
-    for (akyhash::HMiterator<K, K, H, KEQ> it = hm->begin(); it != hm->end(); ++it) {
-      K key = it->first;
+    for (auto it = hm->begin(); it != hm->end(); ++it) {
       tm[it->first] = it->second;
       loops++;      
     }
- 
+
     CPPUNIT_ASSERT(loops == 2);
     CPPUNIT_ASSERT(tm[A] == B);
     CPPUNIT_ASSERT(tm[B] == C);
+
+    auto it = hm->begin();
+    CPPUNIT_ASSERT((*it).first == A);
+    CPPUNIT_ASSERT((*it).second == B);
     
     CPPUNIT_ASSERT((*hm)[(K&)A] == B);
     (*hm)[(K&)A] = C;

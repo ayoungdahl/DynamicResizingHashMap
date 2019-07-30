@@ -155,13 +155,14 @@ namespace akyhash {
     bool operator!=(const HMiterator<K, V, Hash, KeyEQ> &rhs) {
       return hm != rhs.hm || bucket_it != rhs.bucket_it || node_it != rhs.node_it;
     }
-    std::pair<K, std::reference_wrapper<V>> operator*() { return {node_it->kv.first, std::ref(node_it->kv.second)}; }
+    std::pair<K, V> operator*() { return std::pair<K, V>(node_it->kv); }
     std::pair<K, V>* operator->() { return node_it->giveKV(); }
     
     private:
-    HashMap<V, V, Hash, KeyEQ> &hm;
-    typename std::vector<HashBucket<K, V>>::iterator bucket_it;
-    typename std::vector<HashNode<K, V>>::iterator node_it;
+
+      HashMap<V, V, Hash, KeyEQ> &hm;
+      typename std::vector<HashBucket<K, V>>::iterator bucket_it;
+      typename std::vector<HashNode<K, V>>::iterator node_it;
   };
 
 }

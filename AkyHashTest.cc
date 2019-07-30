@@ -43,9 +43,9 @@ private:
   
   CPPUNIT_TEST_SUITE(AkyHashTest);
   CPPUNIT_TEST(testInt);
-  //CPPUNIT_TEST(testString);
-  //CPPUNIT_TEST(testIntString);
-  //CPPUNIT_TEST(test1MInt);
+  CPPUNIT_TEST(testString);
+  CPPUNIT_TEST(testIntString);
+  CPPUNIT_TEST(test1MInt);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -94,20 +94,23 @@ public:
     CPPUNIT_ASSERT_THROW(hm->get(B), std::out_of_range);
     CPPUNIT_ASSERT(hm->get(A) == B);
 
-    akyhash::HMiterator<K, K> it = hm->begin();
-    K key = it->first;
-    /*        
-    //    std::unordered_map<K, V, H, KEQ> tm;
+    
+    rc = hm->insert(std::pair<K, K>(B, C));
+
+    CPPUNIT_ASSERT(rc.second);
+    CPPUNIT_ASSERT(rc.first == C);
+
+    std::unordered_map<K, V, H, KEQ> tm;
     int loops = 0;
     for (akyhash::HMiterator<K, K, H, KEQ> it = hm->begin(); it != hm->end(); ++it) {
-      //K key = it->first;
-      //tm[it->first] = it->second;
-      loops++;
+      K key = it->first;
+      tm[it->first] = it->second;
+      loops++;      
     }
-    */
-    //CPPUNIT_ASSERT(loops == 2);
-    //CPPUNIT_ASSERT(tm[A] == B);
-    //CPPUNIT_ASSERT(tm[B] == C);
+ 
+    CPPUNIT_ASSERT(loops == 2);
+    CPPUNIT_ASSERT(tm[A] == B);
+    CPPUNIT_ASSERT(tm[B] == C);
     
     CPPUNIT_ASSERT((*hm)[(K&)A] == B);
     (*hm)[(K&)A] = C;
@@ -115,8 +118,8 @@ public:
     CPPUNIT_ASSERT(hm->get(A) == C);
   }
   void testInt() { testIt(hm1, 7, 11, 42); }
-  //void testString() { testIt(hm2, s1, s2, s3); }
-  //void testIntString() { testIt(hm3, intString(7, s1), intString(11, s2), intString(42, s3)); }
+  void testString() { testIt(hm2, s1, s2, s3); }
+  void testIntString() { testIt(hm3, intString(7, s1), intString(11, s2), intString(42, s3)); }
   
   void test1MInt() {
     const int num = 1e6;

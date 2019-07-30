@@ -39,7 +39,17 @@ namespace akyhash {
     V get(const K &key) { return buckets[findBucket(hashFunc(key))].get(key, keyEQFunc); }
     size_t erase(const K &key) { return buckets[findBucket(hashFunc(key))].erase(key, keyEQFunc); }
     size_t count(const K &key) const { return buckets[findBucket(hashFunc(key))].count(key, keyEQFunc); } 
-    HMiterator<K, V, Hash, KeyEQ> begin() { return HMiterator<K, V, Hash, KeyEQ>(*this, buckets.begin(), buckets[0].nodeChain.begin()); }
+    HMiterator<K, V, Hash, KeyEQ> begin() {
+
+      typename std::vector<HashBucket<K, V>>::iterator hbit = buckets.begin();
+      typename std::vector<HashNode<K, V>>::iterator hnit;
+      while (hbit != buckets.end() && hbit->nodeChain.begin() == hbit->nodeChain.end()) {
+	hbit++;
+      }
+      
+      hnit = hbit->nodeChain.begin();
+      return HMiterator<K, V, Hash, KeyEQ>(*this, hbit, hnit);
+    }
     HMiterator<K, V, Hash, KeyEQ> end() {
       return HMiterator<K, V, Hash, KeyEQ>(*this, buckets.end(),buckets[numBuckets - 1].nodeChain.end());
     }
@@ -114,10 +124,9 @@ namespace akyhash {
   HMiterator(const HMiterator<K, V, Hash, KeyEQ> &orig) : hm(orig.hm), bucket_it(orig.bucket_it), node_it(orig.node_it) {}
 
     inline void increment() {
-      printf("it key : %d it val : %d\n", (int) node_it->kv.first, (int) node_it->kv.second);
       if (++node_it == bucket_it->nodeChain.end()) {
 	while (bucket_it != hm.buckets.end() && node_it == bucket_it->nodeChain.end()) {
-	  node_it = ++bucket_it->nodeChain.begin();
+	  node_it = (++bucket_it)->nodeChain.begin();
 	}
       }
     }
@@ -149,7 +158,7 @@ namespace akyhash {
     std::pair<K, std::reference_wrapper<V>> operator*() { return {node_it->kv.first, std::ref(node_it->kv.second)}; }
     std::pair<K, V>* operator->() { return node_it->giveKV(); }
     
-  private:
+    private:
     HashMap<V, V, Hash, KeyEQ> &hm;
     typename std::vector<HashBucket<K, V>>::iterator bucket_it;
     typename std::vector<HashNode<K, V>>::iterator node_it;

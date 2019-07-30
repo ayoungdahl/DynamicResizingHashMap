@@ -27,7 +27,7 @@ namespace akyhash {
     bool operator!=(const HashBucket &rhs) const {
       return num_buckets_at_last_update != rhs.num_buckets_at_last_update || nodeChain != rhs.nodeChain;
     }
-	
+
   private:
     template<typename k, typename v, typename Hash, typename KeyEQ>
     friend class HashMap;

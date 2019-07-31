@@ -114,11 +114,16 @@ public:
     auto it = hm->begin();
     CPPUNIT_ASSERT((*it).first == A);
     CPPUNIT_ASSERT((*it).second == B);
+    it->second = C;
     
-    CPPUNIT_ASSERT((*hm)[(K&)A] == B);
-    (*hm)[(K&)A] = C;
-    CPPUNIT_ASSERT(!(hm->get(A) == B));
-    CPPUNIT_ASSERT(hm->get(A) == C);
+    CPPUNIT_ASSERT((*hm)[(K&)A] == C);
+    (*hm)[(K&)A] = B;
+    CPPUNIT_ASSERT(!(hm->get(A) == C));
+    CPPUNIT_ASSERT(hm->get(A) == B);
+
+    it->first = A;
+    CPPUNIT_ASSERT(hm->get(A) == B);
+    CPPUNIT_ASSERT_THROW(hm->get(C), std::out_of_range);
   }
   void testInt() { testIt(hm1, 7, 11, 42); }
   void testString() { testIt(hm2, s1, s2, s3); }

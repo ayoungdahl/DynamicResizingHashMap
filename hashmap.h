@@ -39,10 +39,11 @@ namespace akyhash {
     V get(const K &key) { return buckets[findBucket(hashFunc(key))].get(key, keyEQFunc); }
     size_t erase(const K &key) { return buckets[findBucket(hashFunc(key))].erase(key, keyEQFunc); }
     size_t count(const K &key) const { return buckets[findBucket(hashFunc(key))].count(key, keyEQFunc); } 
+
     HMiterator<K, V, Hash, KeyEQ> begin() {
 
       typename std::vector<HashBucket<K, V>>::iterator hbit = buckets.begin();
-      typename std::vector<HashNode<K, V>>::iterator hnit;
+      typename chain::iterator hnit;
       while (hbit != buckets.end() && hbit->nodeChain.begin() == hbit->nodeChain.end()) {
 	hbit++;
       }
@@ -72,7 +73,7 @@ namespace akyhash {
     }
 
     inline void splitBucket(int oldNum, int newNum) {
-      std::vector<HashNode<K, V>> nodesForOld = buckets[newNum].acceptNodesFromOldReturnRejects(buckets[oldNum].nodeChain, newNum);
+      chain nodesForOld = buckets[newNum].acceptNodesFromOldReturnRejects(buckets[oldNum].nodeChain, newNum);
       buckets[oldNum].swapChain(nodesForOld);
     }
 

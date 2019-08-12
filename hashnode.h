@@ -7,7 +7,7 @@ namespace akyhash {
   class HashNode {
   public:
     HashNode(const std::pair<K, V> &kv, size_t hash) : kv{kv}, hash{hash} {}
-    
+    HashNode(const HashNode &other) : kv{other.kv}, hash{other.hash} {}
     bool operator==(const HashNode &rhs) const { return kv == rhs.kv && hash == rhs.hash; }
 
   private:  

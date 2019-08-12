@@ -15,7 +15,7 @@ namespace akyhash {
   template<typename K, typename V>
   class HashBucket {
   public:
-    explicit HashBucket(const int num_buckets) : num_buckets_at_last_update{num_buckets}, nodeChain{0} {}
+    explicit HashBucket(const int num_buckets) : num_buckets_at_last_update{num_buckets} {}
 
     bool operator==(const HashBucket &rhs) const {
       return num_buckets_at_last_update == rhs.num_buckets_at_last_update && nodeChain == rhs.nodeChain;
@@ -30,23 +30,24 @@ namespace akyhash {
     template<typename k, typename v, typename Hash, typename KeyEQ>
     friend class HMiterator;
     int num_buckets_at_last_update;
-    typedef std::vector<std::unique_ptr<HashNode<K, V>>> chain;
+
+    typedef std::vector<HashNode<K, V>*> chain;
     chain nodeChain;
 
-    chain acceptNodesFromOldReturnRejects(const chain &oldChain, const int matchNum) {
+    chain acceptNodesFromOldReturnRejects(chain &oldChain, const int matchNum) {
 
       chain reject;
       for (auto &node : oldChain) {
 	if (node->hash % num_buckets_at_last_update == matchNum) 
-	  nodeChain.push_back(std::make_unique<HashNode<K, V>>(node));
+	  nodeChain.push_back(node);
 	else 
-	  reject = std::move(node);
+	  reject.push_back(node);
       }
 
       return reject;
     }
 
-    void swapChain(std::unique_ptr<HashNode<K, V>> &swapIn) { std::swap(nodeChain, swapIn); }
+    void swapChain(chain &swapIn) { std::swap(nodeChain, swapIn); }
     
     std::pair<std::reference_wrapper<V>, InsertRC> insert(const std::pair<K, V> &kv, const size_t hash,
 				   std::function<bool(const K &lhs, const K &rhs)> keyEQFunc) {
@@ -68,7 +69,7 @@ namespace akyhash {
 	if (KeyEQFunc(node->kv.first, key))
 	  return {node->giveValRef(), true}; 
       }
-      throw std::out_of_range();
+      throw std::out_of_range("akyHashMap giveValRef");
       //      return {std::ref(nodeChain.back().kv.second), false};
     }
       
@@ -85,7 +86,7 @@ namespace akyhash {
     size_t erase(const K &key, std::function<bool(const K &lhs, const K &rhs)> keyEQFunc) {
 
       for (auto it = nodeChain.begin(); it != nodeChain.end(); ++it) {
-	if (keyEQFunc(it->kv.first, key)) {
+	if (keyEQFunc((*it)->kv.first, key)) {
 	  nodeChain.erase(it);
 	  return 1;
 	}
